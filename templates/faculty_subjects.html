@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Your Subjects - CCS-GradeNet</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              primary: '#D97706',
+              secondary: '#475569',
+              accent: '#f59e0b',
+              success: '#22c55e',
+              warning: '#f97316',
+              danger: '#dc2626',
+              background: '#f8fafc',
+              surface: '#ffffff',
+              'custom-orange': '#D97706',
+              'custom-red': '#dc2626',
+              'custom-bg': '#f3f4f6',
+              'custom-sidebar': '#e5e7eb',
+              'custom-blue': '#3b82f6',
+            },
+          },
+        }
+      }
+    </script>
+</head>
+<body class="bg-custom-bg h-screen flex">
+    <!-- Sidebar -->
+    <aside class="bg-surface shadow-lg w-64 fixed h-full transition-transform duration-300 ease-in-out">
+        <div class="p-4 border-b">
+            <div class="text-center">
+                <div class="relative inline-block">
+                    <img src="{{ url_for('static', filename='images/default_profile.jpg') }}" alt="Profile" 
+                         class="h-16 w-16 rounded-full border-2 border-custom-orange mx-auto">
+                    <span class="absolute bottom-0 right-0 h-3 w-3 bg-success rounded-full"></span>
+                </div>
+                <h3 class="mt-2 font-semibold text-gray-800">{{ current_user.first_name }} {{ current_user.last_name }}</h3>
+                <p class="text-sm text-gray-600">Faculty</p>
+            </div>
+        </div>
+
+        <nav class="mt-6">
+            <div class="px-4 mb-4 text-xs font-semibold text-gray-600 uppercase">Main Menu</div>
+            <a href="{{ url_for('faculty.dashboard') }}" 
+            class="flex items-center px-6 py-3 text-gray-700 hover:bg-custom-orange hover:text-white transition-colors">
+                <i class="fas fa-tachometer-alt w-5"></i>
+                <span class="mx-3">Dashboard</span>
+            </a>
+            <a href="{{ url_for('faculty.subjects') }}" 
+              class="flex items-center px-6 py-3 bg-custom-orange text-white">  
+                <i class="fas fa-book w-5"></i>
+                <span class="mx-3">Subjects</span>
+            </a>
+            <a href="{{ url_for('auth.logout') }}" 
+               class="flex items-center px-6 py-3 text-danger hover:bg-danger hover:text-white transition-colors">
+                <i class="fas fa-sign-out-alt w-5"></i>
+                <span class="mx-3">Logout</span>
+            </a>
+        </nav>
+    </aside>
+
+  <main class="p-6 ml-64">
+    <h1 class="text-2xl font-bold mb-4">My Subjects</h1>
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+      {% for subject in subjects %}
+      <div class="bg-white rounded-lg shadow-md p-6 h-[250px] hover:shadow-lg transition-shadow duration-300 flex flex-col justify-between">
+        <div>
+          <h2 class="text-xl font-semibold text-gray-800 mb-2">{{ subject.subject_name }}</h2>
+          <p class="text-gray-600 text-sm mb-2">
+        <i class="fas fa-code mr-2"></i>{{ subject.subject_code }}
+          </p>
+          <p class="text-gray-600 text-sm">
+        <i class="fas fa-users mr-2"></i>{{ subject.students|length }} Students
+          </p>
+        </div>
+        <div class="mt-4">
+          <a href="{{ url_for('faculty.subject_info', subject_id=subject.subject_id) }}" 
+         class="inline-flex items-center bg-custom-orange text-white px-4 py-2 rounded hover:bg-accent transition-colors duration-300">
+        <span>View Details</span>
+        <i class="fas fa-arrow-right ml-2"></i>
+          </a>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </main>
+  <!-- ...existing footer/scripts... -->
+</body>
+</html>

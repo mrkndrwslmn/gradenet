@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Subject Details - CCS-GradeNet</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script defer src="https://cdnjs.cloudflare.com/ajax/libs/alpinejs/3.13.3/cdn.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              primary: '#D97706',
+              secondary: '#475569',
+              accent: '#f59e0b',
+              success: '#22c55e',
+              warning: '#f97316',
+              danger: '#dc2626',
+              background: '#f8fafc',
+              surface: '#ffffff',
+              'custom-orange': '#D97706',
+              'custom-red': '#dc2626',
+              'custom-bg': '#f3f4f6',
+              'custom-sidebar': '#e5e7eb',
+              'custom-blue': '#3b82f6',
+            },
+          },
+        }
+      }
+    </script>
+    <style>
+      [x-cloak] { display: none !important; }
+    </style>
+</head>
+<body x-data="{ tab: '{{ tab|default("list") }}', addCategory: false, addAssessment: false }" class="bg-custom-bg h-screen flex">
+    <!-- Sidebar -->
+    <aside class="bg-surface shadow-lg w-64 fixed h-full transition-transform duration-300 ease-in-out">
+        <div class="p-4 border-b">
+            <div class="text-center">
+                <div class="relative inline-block">
+                    <img src="{{ url_for('static', filename='images/default_profile.jpg') }}" alt="Profile" 
+                         class="h-16 w-16 rounded-full border-2 border-custom-orange mx-auto">
+                    <span class="absolute bottom-0 right-0 h-3 w-3 bg-success rounded-full"></span>
+                </div>
+                <h3 class="mt-2 font-semibold text-gray-800">{{ current_user.first_name }} {{ current_user.last_name }}</h3>
+                <p class="text-sm text-gray-600">Faculty</p>
+            </div>
+        </div>
+
+        <nav class="mt-6">
+            <div class="px-4 mb-4 text-xs font-semibold text-gray-600 uppercase">Main Menu</div>
+            <a href="{{ url_for('faculty.dashboard') }}" 
+             class="flex items-center px-6 py-3 text-gray-700 hover:bg-custom-orange hover:text-white transition-colors">
+                <i class="fas fa-tachometer-alt w-5"></i>
+                <span class="mx-3">Dashboard</span>
+            </a>
+            <a href="{{ url_for('faculty.subjects') }}" 
+               class="flex items-center px-6 py-3 text-gray-700 hover:bg-custom-orange hover:text-white transition-colors">
+                <i class="fas fa-book w-5"></i>
+                <span class="mx-3">Subjects</span>
+            </a>
+            <a href="{{ url_for('auth.logout') }}" 
+               class="flex items-center px-6 py-3 text-danger hover:bg-danger hover:text-white transition-colors">
+                <i class="fas fa-sign-out-alt w-5"></i>
+                <span class="mx-3">Logout</span>
+            </a>
+        </nav>
+    </aside>
+
+  <main class="p-6 ml-64 flex-1">
+    <h1 class="text-2xl font-bold mb-4">{{ subject.subject_name }}</h1>
+    <div class="mb-4">
+        <p class="text-sm text-gray-600">Total students: {{ enrolled_students|length }}</p>
+    </div>
+
+    <!-- Flash Alert for S2S messages -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+          <div class="mb-4">
+              {% for category, message in messages %}
+                  <div class="p-2 rounded mb-2 text-white bg-{{ category }}">
+                      {{ message }}
+                  </div>
+              {% endfor %}
+          </div>
+      {% endif %}
+  {% endwith %}
+
+    <!-- Tabs -->
+    <div class="mb-6 border-b">
+      <nav class="flex space-x-4">
+        <button :class="tab==='list' ? 'border-b-2 border-custom-orange text-custom-orange' : 'text-gray-600'" @click="tab='list'" class="py-2">Student List</button>
+        <button :class="tab==='grades' ? 'border-b-2 border-custom-orange text-custom-orange' : 'text-gray-600'" @click="tab='grades'" class="py-2">Student Grades</button>
+        <button :class="tab==='summary' ? 'border-b-2 border-custom-orange text-custom-orange' : 'text-gray-600'" @click="tab='summary'" class="py-2">Student Summary</button>
+      </nav>
+    </div>
+
+    <!-- Tab content -->
+    <div>
+      <!-- Student List Section -->
+      <div x-show="tab==='list'">
+        <div class="mb-4 flex justify-between items-center">
+          <input type="text" placeholder="Search students..." class="border rounded p-2" />
+          <div>
+            <button class="bg-green-500 text-white px-4 py-2 rounded mr-2">Import CSV</button>
+            <button class="bg-blue-500 text-white px-4 py-2 rounded" @click="$dispatch('open-add-student-modal')">Add Student Manually</button>
+          </div>
+        </div>
+        <table class="min-w-full bg-white rounded shadow">
+          <thead>
+            <tr>
+              <th class="py-2 px-4 border">Student Number</th>
+              <th class="py-2 px-4 border">First Name</th>
+              <th class="py-2 px-4 border">Middle Name</th>
+              <th class="py-2 px-4 border">Last Name</th>
+              <th class="py-2 px-4 border">Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% if enrolled_students %}
+                {% for student in enrolled_students %}
+                    <tr>
+                        <td class="py-2 px-4 border">{{ student.student_number }}</td>
+                        <td class="py-2 px-4 border">{{ student.first_name }}</td>
+                        <td class="py-2 px-4 border">{{ student.middle_name }}</td>
+                        <td class="py-2 px-4 border">{{ student.last_name }}</td>
+                        <td class="py-2 px-4 border">
+                            <form action="{{ url_for('faculty.remove_student_from_subject', subject_id=subject.subject_id, student_id=student.user_id) }}" method="post">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                <button class="bg-danger text-white px-2 py-1 rounded">Remove</button>
+                            </form>
+                        </td>
+                    </tr>
+                {% endfor %}
+            {% else %}
+                <tr>
+                    <td colspan="5" class="py-4 text-center text-gray-500">No students enrolled in this subject</td>
+                </tr>
+            {% endif %}
+        </tbody>
+        </table>
+      </div>
+
+      <!-- Student Grades Section -->
+      <div x-show="tab==='grades'">
+        <!-- Buttons section -->
+        <div class="flex justify-between items-center mb-4">
+            <div>
+                <button @click="addCategory = true" class="bg-green-500 text-white px-4 py-2 rounded">Add Grade
+                    Category
+                </button>
+                <button @click="addAssessment = true" class="bg-blue-500 text-white px-4 py-2 rounded mr-2">Add
+                    Assessment
+                </button>
+            </div>
+            <div>
+                <button form="gradesForm" type="submit" class="bg-custom-orange text-white px-4 py-2 rounded">
+                    Update Grades
+                </button>
+            </div>
+        </div>
+        <form id="gradesForm" method="post"
+              action="{{ url_for('faculty.update_student_grades', subject_id=subject.subject_id) }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <!-- Grade Categories Setup -->
+            <div class="mb-4">
+                <p class="mb-2 font-semibold">Set Grade Categories (%)</p>
+                <div class="flex space-x-4">
+                    {% for category in grading_categories %}
+                        <div>
+                            <label class="block text-sm">{{ category.category_name }}</label>
+                            <input type="number" name="category_{{ category.category_name }}_percentage"
+                                  value="{{ category.percentage_weight }}" placeholder="{{ category.category_name }}"
+                                  class="border rounded p-2 w-24"/>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+            <!-- Dynamic Assessments and Grades -->
+            {% for category in grading_categories %}
+                <section class="mb-4">
+                    <h3 class="text-lg font-semibold">{{ category.category_name }}</h3>
+                    {% if category.assessments %}
+                        {% for assessment in category.assessments %}
+                            <div class="border p-2 rounded mb-2" x-data="{ openGrades: false, bulkScore: '' }">
+                                <div class="flex justify-between items-center">
+                                    <h4 class="font-medium">{{ assessment.assessment_name }} (Total: {{ assessment.total_score }})</h4>
+                                    <button type="button" class="bg-blue-600 text-white px-3 py-1 rounded"
+                                            @click="openGrades = !openGrades">Edit Grades
+                                    </button>
+                                </div>
+                                <div x-show="openGrades" class="mt-2">
+                                    <!-- Apply to All -->
+                                    <div class="mb-2 flex space-x-2">
+                                        <input type="number" class="border rounded p-1 w-24" placeholder="Score"
+                                              x-model="bulkScore"/>
+                                        <button type="button" class="bg-gray-700 text-white px-3 py-1 rounded"
+                                                @click="
+                                                    let score = parseFloat(bulkScore);
+                                                    if (!isNaN(score)) {
+                                                        let selector = `[data-assessment='{{ assessment.assessment_id }}']`;
+                                                        $refs.table.querySelectorAll(selector).forEach((el) => {
+                                                            el.value = score;
+                                                            el.dispatchEvent(new Event('input', { bubbles: true }));
+                                                        });
+                                                    }
+                                                ">
+                                            Apply to All
+                                        </button>
+                                    </div>
+                                    <table class="min-w-full bg-white rounded shadow" x-ref="table">
+                                        <thead>
+                                        <tr>
+                                            <th class="py-2 px-4 border">Student Name</th>
+                                            <th class="py-2 px-4 border">Score Obtained</th>
+                                        </tr>
+                                        </thead>
+                                        <tbody>
+                                        {% for student in enrolled_students %}
+                                            <tr>
+                                                <td class="py-2 px-4 border">{{ student.first_name }} {{ student.last_name }}</td>
+                                                <td class="py-2 px-4 border">
+                                                    <input type="number"
+                                                          name="score_{{ student.user_id }}_{{ assessment.assessment_id }}"
+                                                          data-assessment="{{ assessment.assessment_id }}"
+                                                          value="{{ assessment.grade_dict.get(student.student_id, '') }}"
+                                                          placeholder="Score" class="border rounded p-1 w-full"/>
+                                                </td>
+                                            </tr>
+                                        {% endfor %}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    {% else %}
+                        <p class="text-gray-600">No assessments created for this category.</p>
+                    {% endif %}
+                </section>
+            {% endfor %}
+        </form>
+      </div>
+
+<!-- Student Summary Section -->
+<div x-show="tab==='summary'">
+  <h2 class="text-xl font-bold mb-4">Student Summary</h2>
+  {% if student_summary %}
+      <table class="min-w-full bg-white rounded shadow mb-4">
+      <thead>
+          <tr>
+              <th class="py-2 px-4 border">Student Name</th>
+              {% for category in grading_categories %}
+                  <th class="py-2 px-4 border">{{ category.category_name }} Avg</th>
+              {% endfor %}
+              <th class="py-2 px-4 border">Final Average (%)</th>
+              <th class="py-2 px-4 border">Equivalent</th>
+          </tr>
+      </thead>
+      <tbody>
+          {% for summary in student_summary %}
+              <tr>
+                  <td class="py-2 px-4 border">{{ summary.first_name }} {{ summary.last_name }}</td>
+                  {% for category in grading_categories %}
+                      {% set category_name = category.category_name.replace(" ", "_") %}
+                      <td class="py-2 px-4 border text-center">
+                        {{ (summary[category_name + '_AVG']|default(0)|float)|round(2) }}%
+                    </td>
+                                        
+                  {% endfor %}
+                  <td class="py-2 px-4 border text-center">
+                      {% if summary.final_average is not none %}
+                          {{ summary.final_average|round(2) }}%
+                      {% else %}
+                          N/A
+                      {% endif %}
+                  </td>
+                  <td class="py-2 px-4 border text-center">{{ summary.equivalent_grade }}</td>
+              </tr>
+          {% endfor %}
+      </tbody>
+  </table>
+  {% else %}
+      <p>No student summary data available for this subject.</p>
+  {% endif %}
+
+  <div class="mt-4 p-4 bg-custom-sidebar rounded">
+      <h3 class="font-semibold mb-2">Grading System</h3>
+      <ul class="list-disc list-inside text-sm">
+          <li>1.00 (99-100) to 1.25 (96-98) – Excellent</li>
+          <li>1.50 (93-95) to 1.75 (90-92) – Very Satisfactory</li>
+          <li>2.00 (87-89) to 2.25 (84-86) – Satisfactory</li>
+          <li>2.50 (81-83) to 2.75 (78-80) – Fairly Satisfactory</li>
+          <li>3.00 (75-77) – Passed</li>
+          <li>4.0 (70-74) – Conditional Failure</li>
+          <li>5.0 (69 and below) – Failed</li>
+          <li>Inc. – Incomplete</li>
+          <li>Drp. – Officially Dropped</li>
+      </ul>
+  </div>
+</div>
+    </div>
+    <div x-show="addCategory" x-cloak class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
+      <div class="bg-white rounded p-6 w-1/3">
+        <h2 class="text-xl font-bold mb-4">Add Grade Category</h2>
+        <form method="post" action="{{ url_for('faculty.add_grading_category', subject_id=subject.subject_id) }}">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <div class="mb-4">
+            <label class="block text-sm font-semibold">Category Name</label>
+            <input type="text" name="category_name" placeholder="Category Name" class="border rounded p-2 w-full" required/>
+          </div>
+          <div class="mb-4">
+            <label class="block text-sm font-semibold">Percentage Weight</label>
+            <input type="number" name="percentage_weight" placeholder="Percentage" class="border rounded p-2 w-full" required/>
+          </div>
+          <div class="flex justify-end">
+            <button type="button" class="mr-2 px-4 py-2 rounded border" @click="addCategory = false">Cancel</button>
+            <button type="submit" class="bg-green-500 text-white px-4 py-2 rounded">Add Category</button>
+          </div>
+        </form>
+      </div>
+    </div>
+    <div x-show="addAssessment" x-cloak class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">      <div class="bg-white rounded p-6 w-1/3">        <h2 class="text-xl font-bold mb-4">Add Assessment</h2>
+        <form method="post" action="{{ url_for('faculty.add_assessment', subject_id=subject.subject_id) }}">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <div class="mb-4">
+            <label class="block text-sm font-semibold">Select Category</label>
+            <select name="category_id" class="border rounded p-2 w-full" required>
+              {% for cat in grading_categories %}
+                <option value="{{ cat.category_id }}">{{ cat.category_name }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="mb-4">
+            <label class="block text-sm font-semibold">Assessment Name</label>
+            <input type="text" name="assessment_name" placeholder="e.g., Recitation" class="border rounded p-2 w-full" required/>
+          </div>
+          <div class="mb-4">
+            <label class="block text-sm font-semibold">Total Score</label>
+            <input type="number" name="total_score" placeholder="e.g., 100" class="border rounded p-2 w-full" required/>
+          </div>
+          <div class="flex justify-end">
+            <button type="button" class="mr-2 px-4 py-2 rounded border" @click="addAssessment = false">Cancel</button>
+            <button type="submit" class="bg-green-500 text-white px-4 py-2 rounded">Save</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </main>
+
+  <!-- Modal for 'Add Student Manually' (hidden by default) -->
+  <div x-data="{ open: false }" @open-add-student-modal.window="open = true" x-show="open" class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
+    <div class="bg-white rounded p-6 w-1/3">
+      <h2 class="text-xl font-bold mb-4">Add Student Manually</h2>
+      <!-- Simple form for adding student manually -->
+      <form action="{{ url_for('faculty.add_student_to_subject', subject_id=subject.subject_id) }}" method="post">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <!-- Input fields for student details -->
+        <input type="text" name="student_id" placeholder="Student ID" class="border rounded p-2 mb-4 w-full" />
+        <div class="flex justify-end">
+          <button type="button" class="mr-2 px-4 py-2 rounded border" @click="open = false">Cancel</button>
+          <button type="submit" class="bg-custom-orange text-white px-4 py-2 rounded">Add</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</body>
+</html>

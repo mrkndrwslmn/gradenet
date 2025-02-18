@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Grades - CCS-GradeNet</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script defer src="https://cdnjs.cloudflare.com/ajax/libs/alpinejs/3.13.3/cdn.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#D97706',
+                        secondary: '#475569',
+                        accent: '#f59e0b',
+                        success: '#22c55e',
+                        warning: '#f97316',
+                        danger: '#dc2626',
+                        background: '#f8fafc',
+                        surface: '#ffffff',
+                        'custom-orange': '#D97706',
+                        'custom-red': '#dc2626',
+                        'custom-bg': '#f3f4f6',
+                        'custom-sidebar': '#e5e7eb',
+                        'custom-blue': '#3b82f6',
+                    },
+                },
+            }
+        }
+    </script>
+    <style>
+        [x-cloak] { display: none !important; }
+    </style>
+</head>
+<body class="bg-custom-bg h-screen flex">
+
+    <!-- Sidebar -->
+    <aside class="bg-surface shadow-lg w-64 fixed h-full transition-transform duration-300 ease-in-out">
+        <div class="p-4 border-b">
+            <div class="text-center">
+                <div class="relative inline-block">
+                    <img src="{{ url_for('static', filename='images/default_profile.jpg') }}" alt="Profile"
+                         class="h-16 w-16 rounded-full border-2 border-custom-orange mx-auto">
+                    <span class="absolute bottom-0 right-0 h-3 w-3 bg-success rounded-full"></span>
+                </div>
+                <h3 class="mt-2 font-semibold text-gray-800">{{ current_user.first_name }} {{ current_user.last_name }}</h3>
+                <p class="text-sm text-gray-600">Student</p>
+            </div>
+        </div>
+
+        <nav class="mt-6">
+            <div class="px-4 mb-4 text-xs font-semibold text-gray-600 uppercase">Main Menu</div>
+            <a href="{{ url_for('student.dashboard') }}"
+               class="flex items-center px-6 py-3 text-gray-700 hover:bg-custom-orange hover:text-white transition-colors">
+                <i class="fas fa-tachometer-alt w-5"></i>
+                <span class="mx-3">Dashboard</span>
+            </a>
+            <a href="{{ url_for('student.grades') }}"
+               class="flex items-center px-6 py-3 bg-custom-orange text-white">
+                <i class="fas fa-book w-5"></i>
+                <span class="mx-3">Grades</span>
+            </a>
+            <a href="{{ url_for('auth.logout') }}"
+               class="flex items-center px-6 py-3 text-danger hover:bg-danger hover:text-white transition-colors">
+                <i class="fas fa-sign-out-alt w-5"></i>
+                <span class="mx-3">Logout</span>
+            </a>
+        </nav>
+    </aside>
+    
+    <div class="flex-1 p-8 ml-[250px] bg-gray-50 min-h-screen" x-data="{ filter: 'All Subjects' }">
+        <!-- Header Section -->
+        <div class="mb-8">
+            <h1 class="text-3xl font-bold text-gray-800 mb-2">My Grades</h1>
+            <p class="text-gray-600">View and track your academic performance</p>
+        </div>
+    
+        <!-- Flash Alert Section -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                <div class="mb-6">
+                    {% for category, message in messages %}
+                        <div class="p-4 rounded-lg shadow-sm mb-2 text-white bg-{{ category }} flex items-center">
+                            <i class="fas fa-info-circle mr-2"></i>
+                            {{ message }}
+                        </div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        {% endwith %}
+    
+        <!-- Filter Section -->
+        <div class="mb-6 bg-white rounded-lg shadow-sm p-4 flex items-center">
+            <label for="subjectFilter" class="mr-3 font-medium text-gray-700">Filter by Subject:</label>
+            <select id="subjectFilter" 
+                    class="border-2 border-gray-200 rounded-lg py-2 px-4 focus:border-custom-orange focus:ring-2 focus:ring-custom-orange/20 outline-none transition-all" 
+                    x-model="filter">
+                <option value="All Subjects">All Subjects</option>
+                {% for subj in subjects_data %}
+                    <option value="{{ subj.subject_code }}">{{ subj.subject_name }}</option>
+                {% endfor %}
+            </select>
+        </div>
+    
+        {% if subjects_data %}
+            {% for subj in subjects_data %}
+                <div class="mb-8 bg-white rounded-lg shadow-sm overflow-hidden" 
+                     x-show="filter === 'All Subjects' || filter === '{{ subj.subject_code }}'">
+                    <!-- Subject Header -->
+                    <div class="bg-gradient-to-r from-custom-orange to-accent p-4">
+                        <h2 class="text-xl font-bold text-white">
+                            {{ subj.subject_code }} - {{ subj.subject_name }}
+                        </h2>
+                    </div>
+    
+                    <!-- Grades Table -->
+                    <div class="p-4">
+                        <div class="overflow-x-auto rounded-lg border border-gray-200">
+                            <table class="min-w-full divide-y divide-gray-200">
+                                <thead class="bg-gray-50">
+                                    <tr>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Category</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Assessment Name</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Score</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Total</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Category Average</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="bg-white divide-y divide-gray-200">
+                                    {% for cat in subj.categories %}
+                                        {% for assess in cat.assessments %}
+                                            <tr class="hover:bg-gray-50 transition-colors">
+                                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">{{ cat.category_name }}</td>
+                                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">{{ assess.assessment_name }}</td>
+                                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium {% if assess.score_obtained %}text-gray-900{% else %}text-gray-400{% endif %}">
+                                                    {{ assess.score_obtained if assess.score_obtained else 0 }}
+                                                </td>
+                                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">{{ assess.total_score }}</td>
+                                                {% if loop.first %}
+                                                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900" rowspan="{{ cat.assessments|length }}">
+                                                        {{ cat.category_average }}%
+                                                    </td>
+                                                {% endif %}
+                                            </tr>
+                                        {% endfor %}
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+    
+                    <!-- Final Grade Card -->
+                    <div class="mx-4 mb-4 p-4 bg-green-50 rounded-lg border border-green-200 flex justify-between items-center">
+                        <div class="space-y-1">
+                            <h3 class="font-medium text-gray-900">Final Average</h3>
+                            <p class="text-2xl font-bold text-gray-900">{{ subj.total_average }}%</p>
+                        </div>
+                        <div class="text-right space-y-1">
+                            <h3 class="font-medium text-gray-900">Grade Equivalent</h3>
+                            <p class="text-2xl font-bold text-gray-900">{{ subj.grade_equivalent }}</p>
+                        </div>
+                    </div>
+    
+                    <!-- Grading System Legend -->
+                    <div class="p-4 bg-gray-50 border-t border-gray-200">
+                        <h3 class="text-sm font-semibold text-gray-700 mb-2">Grading System</h3>
+                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 text-sm text-gray-600">
+                            <div class="bg-white p-3 rounded-lg border border-gray-200">
+                                <span class="font-medium">Excellent</span><br>
+                                1.00 (99-100)<br>
+                                1.25 (96-98)
+                            </div>
+                            <div class="bg-white p-3 rounded-lg border border-gray-200">
+                                <span class="font-medium">Very Satisfactory</span><br>
+                                1.50 (93-95)<br>
+                                1.75 (90-92)
+                            </div>
+                            <div class="bg-white p-3 rounded-lg border border-gray-200">
+                                <span class="font-medium">Satisfactory</span><br>
+                                2.00 (87-89)<br>
+                                2.25 (84-86)
+                            </div>
+                            <div class="bg-white p-3 rounded-lg border border-gray-200">
+                                <span class="font-medium">Other Grades</span><br>
+                                3.00 (75-77) – Passed<br>
+                                4.0 (70-74) – Conditional<br>
+                                5.0 (≤69) – Failed
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        {% else %}
+            <div class="bg-white rounded-lg shadow-sm p-8 text-center">
+                <i class="fas fa-graduation-cap text-gray-400 text-5xl mb-4"></i>
+                <p class="text-gray-600">No grades found for any subjects.</p>
+            </div>
+        {% endif %}
+    </div>
+</body>    
+</html>

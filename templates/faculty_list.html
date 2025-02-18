@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Faculty List - CCS-GradeNet</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script defer src="https://cdnjs.cloudflare.com/ajax/libs/alpinejs/3.13.3/cdn.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              primary: '#D97706',
+              secondary: '#475569',
+              accent: '#f59e0b',
+              success: '#22c55e',
+              warning: '#f97316',
+              danger: '#dc2626',
+              background: '#f8fafc',
+              surface: '#ffffff',
+              'custom-orange': '#D97706',
+              'custom-red': '#dc2626',
+              'custom-bg': '#f3f4f6',
+              'custom-sidebar': '#e5e7eb',
+              'custom-blue': '#3b82f6',
+            },
+          },
+        }
+      }
+    </script>
+</head>
+<body class="bg-custom-bg h-screen flex">
+    <!-- Sidebar -->
+    <aside class="bg-surface shadow-lg w-64 fixed h-full transition-transform duration-300 ease-in-out">
+        <div class="p-4 border-b">
+            <div class="text-center">
+                <div class="relative inline-block">
+                    <img src="{{ url_for('static', filename='images/default_profile.jpg') }}" alt="Profile" 
+                         class="h-16 w-16 rounded-full border-2 border-custom-orange mx-auto">
+                    <span class="absolute bottom-0 right-0 h-3 w-3 bg-success rounded-full"></span>
+                </div>
+                <h3 class="mt-2 font-semibold text-gray-800">{{ current_user.first_name }} {{ current_user.last_name }}</h3>
+                <p class="text-sm text-gray-600">Dean</p>
+            </div>
+        </div>
+
+        <nav class="mt-6">
+            <div class="px-4 mb-4 text-xs font-semibold text-gray-600 uppercase">Main Menu</div>
+            <a href="{{ url_for('dean.dashboard') }}" 
+               class="flex items-center px-6 py-3 text-gray-700 hover:bg-custom-orange hover:text-white transition-colors">
+                <i class="fas fa-tachometer-alt w-5"></i>
+                <span class="mx-3">Dashboard</span>
+            </a>
+            <div x-data="{ open: true }">
+                <button @click="open = !open" 
+                        class="flex items-center w-full px-6 py-3 text-gray-700 hover:bg-custom-orange hover:text-white transition-colors focus:outline-none group">
+                    <i class="fas fa-users w-5"></i>
+                    <span class="mx-3">Faculty</span>
+                    <i class="fas fa-chevron-right w-5 ml-auto transform transition-transform duration-200"
+                       :class="{'rotate-90': open}"></i>
+                </button>
+                <div x-show="open" 
+                     x-transition:enter="transition ease-out duration-200"
+                     x-transition:enter-start="opacity-0 transform -translate-y-2"
+                     x-transition:enter-end="opacity-100 transform translate-y-0"
+                     x-transition:leave="transition ease-in duration-150"
+                     x-transition:leave-start="opacity-100 transform translate-y-0"
+                     x-transition:leave-end="opacity-0 transform -translate-y-2"
+                     class="bg-gray-50">
+                    <a href="{{ url_for('dean.faculty_list') }}" 
+                        class="flex items-center px-11 py-2 bg-custom-orange text-white">
+                        <i class="fas fa-list-ul w-5 text-sm"></i>
+                        <span class="mx-3">Faculty List</span>
+                    </a>
+                    <a href="{{ url_for('dean.add_faculty') }}" 
+                       class="flex items-center px-11 py-2 text-gray-700 hover:bg-custom-orange hover:text-white transition-colors">
+                        <i class="fas fa-user-plus w-5 text-sm"></i>
+                        <span class="mx-3">Add Faculty</span>
+                    </a>
+                    <a href="{{ url_for('faculty.faculty_loading') }}" 
+                       class="flex items-center px-11 py-2 text-gray-700 hover:bg-custom-orange hover:text-white transition-colors">
+                        <i class="fas fa-tasks w-5 text-sm"></i>
+                        <span class="mx-3">Faculty Loading</span>
+                    </a>
+                    <a href="{{ url_for('faculty.faculty_archive') }}" 
+                       class="flex items-center px-11 py-2 text-gray-700 hover:bg-custom-orange hover:text-white transition-colors">
+                        <i class="fas fa-archive w-5 text-sm"></i>
+                        <span class="mx-3">Faculty Archive</span>
+                    </a>
+                </div>
+            </div>
+            <a href="{{ url_for('dean.students') }}" 
+            class="flex items-center px-6 py-3 text-gray-700 hover:bg-custom-orange hover:text-white transition-colors">
+                <i class="fas fa-graduation-cap w-5"></i>
+                <span class="mx-3">Students</span>
+            </a>
+            <a href="{{ url_for('subject.list_subjects') }}" 
+               class="flex items-center px-6 py-3 text-gray-700 hover:bg-custom-orange hover:text-white transition-colors">
+                <i class="fas fa-book w-5"></i>
+                <span class="mx-3">Subjects</span>
+            </a>
+
+            <div class="px-4 mt-6 mb-4 text-xs font-semibold text-gray-600 uppercase">Account</div>
+            <a href="#" class="flex items-center px-6 py-3 text-gray-700 hover:bg-custom-orange hover:text-white transition-colors">
+                <i class="fas fa-user w-5"></i>
+                <span class="mx-3">Profile</span>
+            </a>
+            <a href="#" class="flex items-center px-6 py-3 text-gray-700 hover:bg-custom-orange hover:text-white transition-colors">
+                <i class="fas fa-cog w-5"></i>
+                <span class="mx-3">Settings</span>
+            </a>
+            <a href="{{ url_for('auth.logout') }}" 
+               class="flex items-center px-6 py-3 text-danger hover:bg-danger hover:text-white transition-colors">
+                <i class="fas fa-sign-out-alt w-5"></i>
+                <span class="mx-3">Logout</span>
+            </a>
+        </nav>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="ml-64 flex-1 flex flex-col p-8">
+        <header class="bg-custom-orange text-white p-0 flex justify-between items-center -mx-8 -my-8">
+            <div class="flex items-center p-3">
+            <img src="{{ url_for('static', filename='images/ccs_gradenet_logo.png') }}" alt="CCS-GradeNet Logo" class="h-16">
+            <span class="ml-4 text-xl font-bold">CCS-GradeNet</span>
+            </div>
+            <div class="p-3">
+            School Year: 2024 - 2025 Second Semester FINALS
+            </div>
+        </header>
+
+        <h1 class="text-2xl font-semibold mb-2 mt-12">Faculty List</h1>
+
+        <!-- Filters Section -->
+        <div class="bg-surface rounded-lg shadow-md p-4 mb-6">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <!-- Search -->
+                <div class="flex items-center space-x-2">
+                    <div class="relative flex-1">
+                        <form method="GET" action="{{ url_for('dean.faculty_list') }}" class="flex items-center">
+                            <input type="text" 
+                                id="search" 
+                                name="search" 
+                                placeholder="Search faculty..."
+                                value="{{ search_term }}"
+                                class="w-full rounded-lg border border-gray-300 pl-10 pr-4 py-2 focus:border-custom-orange focus:ring focus:ring-custom-orange focus:ring-opacity-50">
+                            <i class="fas fa-search absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
+                            <button type="submit" class="absolute right-2 top-1/2 transform -translate-y-1/2 text-custom-orange hover:text-blue-700">
+                                <i class="fas fa-arrow-right"></i>
+                            </button>
+                        </form>
+                    </div>
+                </div>
+
+            <!-- Entries per page -->
+            <div class="flex items-center justify-end space-x-2">
+                <label for="entries" class="text-gray-700 font-medium">Show:</label>
+                <select id="entries" 
+                        name="entries" 
+                        onchange="this.form.submit()"
+                        class="rounded-lg border-gray-300 focus:border-custom-orange focus:ring focus:ring-custom-orange focus:ring-opacity-50">
+                    <option value="10" {% if request.args.get('entries') == '10' %}selected{% endif %}>10</option>
+                    <option value="25" {% if request.args.get('entries') == '25' %}selected{% endif %}>25</option>
+                    <option value="50" {% if request.args.get('entries') == '50' %}selected{% endif %}>50</option>
+                    <option value="100" {% if request.args.get('entries') == '100' %}selected{% endif %}>100</option>
+                </select>
+                <span class="text-gray-700">entries</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Flash Alert for S2S messages -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+            <div class="mb-4">
+                {% for category, message in messages %}
+                    <div class="p-2 rounded mb-2 text-white bg-{{ category }}">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+    {% endwith %}
+
+    <!-- Faculty Table -->
+    <div class="bg-surface rounded-lg shadow-md overflow-hidden">
+        <table class="min-w-full divide-y divide-gray-200">
+            <thead class="bg-gray-50">
+                <tr>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ID</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Full Name</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Contact</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Designation</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                </tr>
+            </thead>
+            <tbody class="bg-white divide-y divide-gray-200">
+                {% for faculty in faculties %}
+                <tr class="hover:bg-gray-50 transition-colors">
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                        {{ faculty.user_id }}
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        {{ faculty.first_name }} {{ faculty.middle_name or '' }} {{ faculty.last_name }}
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        <div class="flex items-center">
+                            <i class="fas fa-envelope mr-2 text-custom-orange"></i>
+                            {{ faculty.email }}
+                        </div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        <div class="flex items-center">
+                            <i class="fas fa-phone mr-2 text-success"></i>
+                            {{ faculty.phone }}
+                        </div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
+                                   {% if faculty.role == 'Professor' %}bg-blue-100 text-blue-800
+                                   {% elif faculty.role == 'Assistant Professor' %}bg-green-100 text-green-800
+                                   {% else %}bg-gray-100 text-gray-800{% endif %}">
+                            {{ faculty.role }}
+                        </span>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                        <div class="flex space-x-3">
+                            <button class="text-custom-orange hover:text-blue-700 transition-colors" title="View Details">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                            <a href="{{ url_for('dean.edit_faculty', faculty_id=faculty.user_id) }}"
+                               class="text-warning hover:text-orange-700 transition-colors" title="Edit">
+                                <i class="fas fa-edit"></i>
+                            </a>
+                            <form method="POST" action="{{ url_for('dean.archive_faculty', faculty_id=faculty.user_id) }}" class="inline">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                <button type="submit" 
+                                        class="text-danger hover:text-red-700 transition-colors" 
+                                        title="Archive"
+                                        onclick="return confirm('Are you sure you want to archive this faculty member?')">
+                                    <i class="fas fa-archive"></i>
+                                </button>
+                            </form>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Pagination -->
+    <div class="mt-4 flex justify-between items-center bg-surface rounded-lg shadow-md p-4">
+        <div class="text-sm text-gray-700">
+            Showing <span class="font-medium">{{ (page - 1) * entries_per_page + 1 }}</span> to <span class="font-medium">{{ min(page * entries_per_page, total_records) }}</span> of <span class="font-medium">{{ total_records }}</span> entries
+        </div>
+        <nav class="relative z-0 inline-flex rounded-md shadow-sm -space-x-px" aria-label="Pagination">
+            {% if page > 1 %}
+                <a href="{{ url_for('dean.faculty_list', page=page-1, search=search_term, entries=entries_per_page) }}" class="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
+                    <i class="fas fa-chevron-left"></i>
+                </a>
+            {% endif %}
+            {% for p in range(1, num_pages + 1) %}
+                {% if p == page %}
+                    <a href="#" class="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-custom-orange text-sm font-medium text-white">
+                        {{ p }}
+                    </a>
+                {% else %}
+                    <a href="{{ url_for('dean.faculty_list', page=p, search=search_term, entries=entries_per_page) }}" class="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50">
+                        {{ p }}
+                    </a>
+                {% endif %}
+            {% endfor %}
+            {% if page < num_pages %}
+                <a href="{{ url_for('dean.faculty_list', page=page+1, search=search_term, entries=entries_per_page) }}" class="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
+                    <i class="fas fa-chevron-right"></i>
+                </a>
+            {% endif %}
+        </nav>
+    </div>
+</div>
+
+</body>
+</html>

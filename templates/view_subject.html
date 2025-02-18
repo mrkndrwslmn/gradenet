@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>View Subject - CCS-GradeNet</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script defer src="https://cdnjs.cloudflare.com/ajax/libs/alpinejs/3.13.3/cdn.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              primary: '#D97706',
+              secondary: '#475569',
+              accent: '#f59e0b',
+              success: '#22c55e',
+              warning: '#f97316',
+              danger: '#dc2626',
+              background: '#f8fafc',
+              surface: '#ffffff',
+              'custom-orange': '#D97706',
+              'custom-red': '#dc2626',
+              'custom-bg': '#f3f4f6',
+              'custom-sidebar': '#e5e7eb',
+              'custom-blue': '#3b82f6',
+            },
+          },
+        }
+      }
+    </script>
+</head>
+<body class="bg-custom-bg h-screen flex">
+    <!-- Sidebar -->
+    <aside class="bg-surface shadow-lg w-64 fixed h-full transition-transform duration-300 ease-in-out">
+        <div class="p-4 border-b">
+            <div class="text-center">
+                <div class="relative inline-block">
+                    <img src="{{ url_for('static', filename='images/default_profile.jpg') }}" alt="Profile" 
+                         class="h-16 w-16 rounded-full border-2 border-custom-orange mx-auto">
+                    <span class="absolute bottom-0 right-0 h-3 w-3 bg-success rounded-full"></span>
+                </div>
+                <h3 class="mt-2 font-semibold text-gray-800">{{ current_user.first_name }} {{ current_user.last_name }}</h3>
+                <p class="text-sm text-gray-600">Dean</p>
+            </div>
+        </div>
+
+        <nav class="mt-6">
+            <div class="px-4 mb-4 text-xs font-semibold text-gray-600 uppercase">Main Menu</div>
+            <a href="{{ url_for('dean.dashboard') }}" 
+               class="flex items-center px-6 py-3 text-gray-700 hover:bg-custom-orange hover:text-white transition-colors">
+                <i class="fas fa-tachometer-alt w-5"></i>
+                <span class="mx-3">Dashboard</span>
+            </a>
+            <div x-data="{ open: false }">
+                <button @click="open = !open" 
+                        class="flex items-center w-full px-6 py-3 text-gray-700 hover:bg-custom-orange hover:text-white transition-colors focus:outline-none group">
+                    <i class="fas fa-users w-5"></i>
+                    <span class="mx-3">Faculty</span>
+                    <i class="fas fa-chevron-right w-5 ml-auto transform transition-transform duration-200"
+                       :class="{'rotate-90': open}"></i>
+                </button>
+                <div x-show="open" 
+                     x-transition:enter="transition ease-out duration-200"
+                     x-transition:enter-start="opacity-0 transform -translate-y-2"
+                     x-transition:enter-end="opacity-100 transform translate-y-0"
+                     x-transition:leave="transition ease-in duration-150"
+                     x-transition:leave-start="opacity-100 transform translate-y-0"
+                     x-transition:leave-end="opacity-0 transform -translate-y-2"
+                     class="bg-gray-50">
+                    <a href="{{ url_for('dean.faculty_list') }}" 
+                       class="flex items-center px-11 py-2 text-gray-700 hover:bg-custom-orange hover:text-white transition-colors">
+                        <i class="fas fa-list-ul w-5 text-sm"></i>
+                        <span class="mx-3">Faculty List</span>
+                    </a>
+                    <a href="{{ url_for('dean.add_faculty') }}" 
+                       class="flex items-center px-11 py-2 text-gray-700 hover:bg-custom-orange hover:text-white transition-colors">
+                        <i class="fas fa-user-plus w-5 text-sm"></i>
+                        <span class="mx-3">Add Faculty</span>
+                    </a>
+                    <a href="{{ url_for('faculty.faculty_loading') }}" 
+                       class="flex items-center px-11 py-2 text-gray-700 hover:bg-custom-orange hover:text-white transition-colors">
+                        <i class="fas fa-tasks w-5 text-sm"></i>
+                        <span class="mx-3">Faculty Loading</span>
+                    </a>
+                    <a href="{{ url_for('faculty.faculty_archive') }}" 
+                       class="flex items-center px-11 py-2 text-gray-700 hover:bg-custom-orange hover:text-white transition-colors">
+                        <i class="fas fa-archive w-5 text-sm"></i>
+                        <span class="mx-3">Faculty Archive</span>
+                    </a>
+                </div>
+            </div>
+            <a href="{{ url_for('dean.students') }}" 
+               class="flex items-center px-6 py-3 bg-custom-orange text-white">
+                <i class="fas fa-graduation-cap w-5"></i>
+                <span class="mx-3">Students</span>
+            </a>
+            <a href="{{ url_for('subject.list_subjects') }}" 
+               class="flex items-center px-6 py-3 text-gray-700 hover:bg-custom-orange hover:text-white transition-colors">
+                <i class="fas fa-book w-5"></i>
+                <span class="mx-3">Subjects</span>
+            </a>
+
+            <div class="px-4 mt-6 mb-4 text-xs font-semibold text-gray-600 uppercase">Account</div>
+            <a href="#" class="flex items-center px-6 py-3 text-gray-700 hover:bg-custom-orange hover:text-white transition-colors">
+                <i class="fas fa-user w-5"></i>
+                <span class="mx-3">Profile</span>
+            </a>
+            <a href="#" class="flex items-center px-6 py-3 text-gray-700 hover:bg-custom-orange hover:text-white transition-colors">
+                <i class="fas fa-cog w-5"></i>
+                <span class="mx-3">Settings</span>
+            </a>
+            <a href="{{ url_for('auth.logout') }}" 
+               class="flex items-center px-6 py-3 text-danger hover:bg-danger hover:text-white transition-colors">
+                <i class="fas fa-sign-out-alt w-5"></i>
+                <span class="mx-3">Logout</span>
+            </a>
+        </nav>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="ml-64 flex-1 flex flex-col">
+        <!-- Header -->
+        <header class="bg-custom-orange text-white p-2 flex justify-between items-center">
+            <img src="{{ url_for('static', filename='images/ccs_gradenet_logo.png') }}" alt="Logo" class="h-12">
+            <h1 class="text-2xl font-bold ">CCS-Gradenet</h1>
+            <div class="flex items-center space-x-4">
+                    <i class="fas fa-calendar-alt mr-2"></i>
+                    AY 2024-2025 Second Semester FINALS
+            </div>
+        </header>
+
+    <!-- Content Area -->
+    <div class="p-6 flex-1">
+      <h1 class="text-2xl font-bold mb-4">Subject Details</h1>
+      <div class="bg-white shadow-md rounded px-8 pt-6 pb-8 mb-4">
+        <div class="mb-4">
+          <label class="block text-gray-700 text-sm font-bold mb-2">Subject Code</label>
+          <p class="text-gray-700">{{ subject.subject_code }}</p>
+        </div>
+        <div class="mb-4">
+          <label class="block text-gray-700 text-sm font-bold mb-2">Subject Name</label>
+          <p class="text-gray-700">{{ subject.subject_name }}</p>
+        </div>
+        <div class="mb-4">
+          <label class="block text-gray-700 text-sm font-bold mb-2">Year Level</label>
+          <p class="text-gray-700">{{ subject.year_level }}</p>
+        </div>
+        <div class="mb-4">
+          <label class="block text-gray-700 text-sm font-bold mb-2">Semester</label>
+          <p class="text-gray-700">{{ subject.semester }}</p>
+        </div>
+        <div class="mb-4">
+          <label class="block text-gray-700 text-sm font-bold mb-2">Prerequisites</label>
+          <p class="text-gray-700">{{ subject.prerequisites }}</p>
+        </div>
+        <div class="flex items-center justify-between">
+          <a href="{{ url_for('subject.list_subjects') }}" class="bg-custom-blue hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
+            Back to Subjects List
+          </a>
+        </div>
+      </div>
+    </div>
+  </main>
+</body>
+</html>
