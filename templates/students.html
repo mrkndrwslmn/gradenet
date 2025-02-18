@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Students Management - CCS-GradeNet</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script defer src="https://cdnjs.cloudflare.com/ajax/libs/alpinejs/3.13.3/cdn.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              primary: '#D97706',
+              secondary: '#475569',
+              accent: '#f59e0b',
+              success: '#22c55e',
+              warning: '#f97316',
+              danger: '#dc2626',
+              background: '#f8fafc',
+              surface: '#ffffff',
+              'custom-orange': '#D97706',
+              'custom-red': '#dc2626',
+              'custom-bg': '#f3f4f6',
+              'custom-sidebar': '#e5e7eb',
+              'custom-blue': '#3b82f6',
+            },
+          },
+        }
+      }
+    </script>
+</head>
+<body class="bg-custom-bg h-screen flex">
+    <!-- Sidebar -->
+    <aside class="bg-surface shadow-lg w-64 fixed h-full transition-transform duration-300 ease-in-out">
+        <div class="p-4 border-b">
+            <div class="text-center">
+                <div class="relative inline-block">
+                    <img src="{{ url_for('static', filename='images/default_profile.jpg') }}" alt="Profile" 
+                         class="h-16 w-16 rounded-full border-2 border-custom-orange mx-auto">
+                    <span class="absolute bottom-0 right-0 h-3 w-3 bg-success rounded-full"></span>
+                </div>
+                <h3 class="mt-2 font-semibold text-gray-800">{{ current_user.first_name }} {{ current_user.last_name }}</h3>
+                <p class="text-sm text-gray-600">Dean</p>
+            </div>
+        </div>
+
+        <nav class="mt-6">
+            <div class="px-4 mb-4 text-xs font-semibold text-gray-600 uppercase">Main Menu</div>
+            <a href="{{ url_for('dean.dashboard') }}" 
+               class="flex items-center px-6 py-3 text-gray-700 hover:bg-custom-orange hover:text-white transition-colors">
+                <i class="fas fa-tachometer-alt w-5"></i>
+                <span class="mx-3">Dashboard</span>
+            </a>
+            <div x-data="{ open: false }">
+                <button @click="open = !open" 
+                        class="flex items-center w-full px-6 py-3 text-gray-700 hover:bg-custom-orange hover:text-white transition-colors focus:outline-none group">
+                    <i class="fas fa-users w-5"></i>
+                    <span class="mx-3">Faculty</span>
+                    <i class="fas fa-chevron-right w-5 ml-auto transform transition-transform duration-200"
+                       :class="{'rotate-90': open}"></i>
+                </button>
+                <div x-show="open" 
+                     x-transition:enter="transition ease-out duration-200"
+                     x-transition:enter-start="opacity-0 transform -translate-y-2"
+                     x-transition:enter-end="opacity-100 transform translate-y-0"
+                     x-transition:leave="transition ease-in duration-150"
+                     x-transition:leave-start="opacity-100 transform translate-y-0"
+                     x-transition:leave-end="opacity-0 transform -translate-y-2"
+                     class="bg-gray-50">
+                    <a href="{{ url_for('dean.faculty_list') }}" 
+                       class="flex items-center px-11 py-2 text-gray-700 hover:bg-custom-orange hover:text-white transition-colors">
+                        <i class="fas fa-list-ul w-5 text-sm"></i>
+                        <span class="mx-3">Faculty List</span>
+                    </a>
+                    <a href="{{ url_for('dean.add_faculty') }}" 
+                       class="flex items-center px-11 py-2 text-gray-700 hover:bg-custom-orange hover:text-white transition-colors">
+                        <i class="fas fa-user-plus w-5 text-sm"></i>
+                        <span class="mx-3">Add Faculty</span>
+                    </a>
+                    <a href="{{ url_for('faculty.faculty_loading') }}" 
+                       class="flex items-center px-11 py-2 text-gray-700 hover:bg-custom-orange hover:text-white transition-colors">
+                        <i class="fas fa-tasks w-5 text-sm"></i>
+                        <span class="mx-3">Faculty Loading</span>
+                    </a>
+                    <a href="{{ url_for('faculty.faculty_archive') }}" 
+                       class="flex items-center px-11 py-2 text-gray-700 hover:bg-custom-orange hover:text-white transition-colors">
+                        <i class="fas fa-archive w-5 text-sm"></i>
+                        <span class="mx-3">Faculty Archive</span>
+                    </a>
+                </div>
+            </div>
+            <a href="{{ url_for('dean.students') }}" 
+               class="flex items-center px-6 py-3 bg-custom-orange text-white">
+                <i class="fas fa-graduation-cap w-5"></i>
+                <span class="mx-3">Students</span>
+            </a>
+            <a href="{{ url_for('subject.list_subjects') }}" 
+               class="flex items-center px-6 py-3 text-gray-700 hover:bg-custom-orange hover:text-white transition-colors">
+                <i class="fas fa-book w-5"></i>
+                <span class="mx-3">Subjects</span>
+            </a>
+
+            <div class="px-4 mt-6 mb-4 text-xs font-semibold text-gray-600 uppercase">Account</div>
+            <a href="#" class="flex items-center px-6 py-3 text-gray-700 hover:bg-custom-orange hover:text-white transition-colors">
+                <i class="fas fa-user w-5"></i>
+                <span class="mx-3">Profile</span>
+            </a>
+            <a href="#" class="flex items-center px-6 py-3 text-gray-700 hover:bg-custom-orange hover:text-white transition-colors">
+                <i class="fas fa-cog w-5"></i>
+                <span class="mx-3">Settings</span>
+            </a>
+            <a href="{{ url_for('auth.logout') }}" 
+               class="flex items-center px-6 py-3 text-danger hover:bg-danger hover:text-white transition-colors">
+                <i class="fas fa-sign-out-alt w-5"></i>
+                <span class="mx-3">Logout</span>
+            </a>
+        </nav>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="ml-64 flex-1 flex flex-col">
+        <header class="bg-custom-orange text-white p-2 flex justify-between items-center">
+            <div class="flex items-center">
+            <img src="{{ url_for('static', filename='images/ccs_gradenet_logo.png') }}" alt="CCS-GradeNet Logo" class="h-16">
+            <span class="ml-4 text-xl font-bold">CCS-GradeNet</span>
+            </div>
+            <div>
+            School Year: 2024 - 2025 Second Semester FINALS
+            </div>
+        </header>
+
+        <!-- Content Area -->
+        <div class="p-6 flex-1">
+            <!-- Action Buttons -->
+            <div class="flex items-center justify-between mb-4">
+                <div>
+                    <a href="{{ url_for('student.add_student') }}" class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded inline-block">
+                        Add Student Manually
+                    </a>
+                </div>
+                <div class="flex items-center">
+                    <form method="POST" action="{{ url_for('dean.import_students') }}" enctype="multipart/form-data">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <input type="file" id="studentFile" name="studentFile" class="mr-2">
+                        <button type="submit" class="bg-custom-blue hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
+                            Import Student Record
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Filters Section -->
+            <div class="bg-surface rounded-lg shadow-md p-4 mb-6">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <!-- Section Filter -->
+                    <div class="flex items-center space-x-2">
+                        <label for="sectionToggle" class="text-gray-700 font-medium">Section:</label>
+                        <select id="sectionToggle" name="sectionToggle" 
+                                class="flex-1 rounded-lg border-gray-300 focus:border-custom-orange focus:ring focus:ring-custom-orange focus:ring-opacity-50">
+                            <option value="all">All Sections</option>
+                            {% for sec in distinct_sections %}
+                                <option value="{{ sec }}" {% if request.args.get('sectionToggle') == sec %}selected{% endif %}>
+                                    {{ sec }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <!-- Search -->
+                    <div class="flex items-center space-x-2">
+                        <div class="relative flex-1">
+                            <input type="text" id="search" name="search" placeholder="Search students..."
+                                   value="{{ search_term }}"
+                                   class="w-full rounded-lg border-gray-300 pl-10 focus:border-custom-orange focus:ring focus:ring-custom-orange focus:ring-opacity-50">
+                            <i class="fas fa-search absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
+                        </div>
+                    </div>
+
+                    <!-- Entries per page -->
+                    <div class="flex items-center space-x-2">
+                        <label for="entries" class="text-gray-700 font-medium">Show:</label>
+                        <select id="entries" name="entries" 
+                                class="rounded-lg border-gray-300 focus:border-custom-orange focus:ring focus:ring-custom-orange focus:ring-opacity-50">
+                            <option value="10" {% if request.args.get('entries') == '10' %}selected{% endif %}>10</option>
+                            <option value="25" {% if request.args.get('entries') == '25' %}selected{% endif %}>25</option>
+                            <option value="50" {% if request.args.get('entries') == '50' %}selected{% endif %}>50</option>
+                            <option value="100" {% if request.args.get('entries') == '100' %}selected{% endif %}>100</option>
+                        </select>
+                        <span class="text-gray-700">entries</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Flash Alert for S2S messages -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+                <div class="mb-4">
+                    {% for category, message in messages %}
+                        <div class="p-2 rounded mb-2 text-white bg-{{ category }}">
+                            {{ message }}
+                        </div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        {% endwith %}
+
+            <!-- Student Table -->
+            <div class="bg-surface rounded-lg shadow-md overflow-hidden">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Student Number
+                            </th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Name
+                            </th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Section
+                            </th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Year Level
+                            </th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Semester
+                            </th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Actions
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-gray-200">
+                        {% for student in students %}
+                        <tr class="hover:bg-gray-50 transition-colors">
+                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                                {{ student.student_number }}
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                {{ student.last_name }}, {{ student.first_name }} {{ student.middle_name or '' }}
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                {{ student.section }}
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                {{ student.year_level }}{% if student.year_level == 1 %}st
+                                {% elif student.year_level == 2 %}nd
+                                {% elif student.year_level == 3 %}rd
+                                {% else %}th{% endif %} Year
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                {{ student.semester }}{% if student.semester == 1 %}st{% else %}nd{% endif %} Semester
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                <div class="flex space-x-2">
+                                    <!-- View action -->
+                                    <a href="{{ url_for('student.view_student', student_id=student.user_id) }}" class="text-custom-orange hover:text-blue-700 transition-colors">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+                                    <!-- Edit action -->
+                                    <a href="{{ url_for('student.edit_student', student_id=student.user_id) }}" class="text-warning hover:text-orange-700 transition-colors">
+                                        <i class="fas fa-edit"></i>
+                                    </a>
+                                    <!-- Delete action -->
+                                    <form method="POST" action="{{ url_for('student.delete_student', student_id=student.user_id) }}" onsubmit="return confirm('Are you sure you want to delete this student?');">
+                                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                        <button type="submit" class="text-danger hover:text-red-700 transition-colors">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Pagination Links -->
+            <div class="flex justify-center mt-4">
+                <nav class="relative z-0 inline-flex rounded-md shadow-sm -space-x-px" aria-label="Pagination">
+                    {% if page > 1 %}
+                        <a href="{{ url_for('dean.students', page=page-1, search=search_term, entries=entries_per_page, sectionToggle=section_filter) }}" class="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
+                            <i class="fas fa-chevron-left"></i>
+                        </a>
+                    {% endif %}
+                    {% for p in range(1, num_pages + 1) %}
+                        {% if p == page %}
+                            <a href="#" class="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-custom-orange text-sm font-medium text-white">
+                                {{ p }}
+                            </a>
+                        {% else %}
+                            <a href="{{ url_for('dean.students', page=p, search=search_term, entries=entries_per_page, sectionToggle=section_filter) }}" class="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50">
+                                {{ p }}
+                            </a>
+                        {% endif %}
+                    {% endfor %}
+                    {% if page < num_pages %}
+                        <a href="{{ url_for('dean.students', page=page+1, search=search_term, entries=entries_per_page, sectionToggle=section_filter) }}" class="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
+                            <i class="fas fa-chevron-right"></i>
+                        </a>
+                    {% endif %}
+                </nav>
+            </div>
+        </div>
+    </main>
+
+    <script>
+      function applyFilters() {
+        const section = document.getElementById('sectionToggle').value;
+        const entries = document.getElementById('entries').value;
+        const searchEl = document.getElementById('search');
+        const search = searchEl ? searchEl.value : "";
+        
+        // Build query string
+        let params = new URLSearchParams(window.location.search);
+        params.set('sectionToggle', section);
+        params.set('entries', entries);
+        if(search.trim()){
+          params.set('search', search);
+        } else {
+          params.delete('search');
+        }
+        params.set('page', '1'); // Reset to first page on filter change
+        window.location.href = window.location.pathname + '?' + params.toString();
+      }
+    
+      // Attach listeners for the filter elements
+      document.getElementById('sectionToggle').addEventListener('change', applyFilters);
+      document.getElementById('entries').addEventListener('change', applyFilters);
+
+      // Debounce for search input: wait 2 seconds after typing stops
+      let debounceTimer;
+      document.getElementById('search').addEventListener('input', function() {
+        clearTimeout(debounceTimer);
+        debounceTimer = setTimeout(applyFilters, 2000);
+      });
+    </script>
+
+</body>
+</html>

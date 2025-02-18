@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Grading - CCS-GradeNet</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-custom-bg">
+  <!-- ...existing header/sidebar... -->
+  <main class="p-6 ml-64">
+    <h1 class="text-2xl font-bold mb-4">Grading for Subject ID: {{ subject_id }}</h1>
+    
+    {% for category in categories %}
+      <section class="mb-6">
+        <h2 class="text-xl font-semibold">{{ category.category_name }} ({{ category.percentage_weight }}%)</h2>
+        {% if category.assessments %}
+          <table class="min-w-full bg-white rounded shadow mb-4">
+            <thead>
+              <tr>
+                <th class="py-2 px-4 border">Assessment</th>
+                <th class="py-2 px-4 border">Total Score</th>
+                <th class="py-2 px-4 border">Student Number</th>
+                <th class="py-2 px-4 border">Student Name</th>
+                <th class="py-2 px-4 border">Score Obtained</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for assessment in category.assessments %}
+                {% if assessment.grades %}
+                  {% for grade in assessment.grades %}
+                    <tr>
+                      <td class="py-2 px-4 border">{{ assessment.assessment_name }}</td>
+                      <td class="py-2 px-4 border">{{ assessment.total_score }}</td>
+                      <td class="py-2 px-4 border">{{ grade.student_number }}</td>
+                      <td class="py-2 px-4 border">{{ grade.first_name }} {{ grade.last_name }}</td>
+                      <td class="py-2 px-4 border">{{ grade.score_obtained }}</td>
+                    </tr>
+                  {% endfor %}
+                {% else %}
+                  <tr>
+                    <td class="py-2 px-4 border" colspan="5" align="center">No grades recorded for {{ assessment.assessment_name }}</td>
+                  </tr>
+                {% endif %}
+              {% endfor %}
+            </tbody>
+          </table>
+        {% else %}
+          <p class="text-gray-600">No assessments available in this category.</p>
+        {% endif %}
+      </section>
+    {% endfor %}
+  </main>
+  <!-- ...existing footer/scripts... -->
+</body>
+</html>
