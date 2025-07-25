@@ -276,7 +276,7 @@ def calculate_category_averages(enrolled_students, categories):
                 grades = assessment.get('grades', [])
                 grade = next((g for g in grades if g['student_id'] == student_id), None)
                 if grade:
-                    total_score += grade['score_obtained'] / assessment['total_score'] * 100
+                    total_score += float(grade['score_obtained']) / float(assessment['total_score']) * 100
                     count += 1
             avg = total_score / count if count > 0 else 0
             category_averages[student_id][category_id] = avg

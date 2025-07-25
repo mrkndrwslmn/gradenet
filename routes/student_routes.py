@@ -168,11 +168,11 @@ def grades():
                 total_pct = 0.0
                 for assess in assessments:
                     if assess['score_obtained'] is not None:
-                        total_pct += (assess['score_obtained'] / assess['total_score']) * 100
+                        total_pct += (float(assess['score_obtained']) / float(assess['total_score'])) * 100
                 cat_avg = (total_pct / len(assessments)) if assessments else 0
 
                 # Weighted contribution to final
-                weighted = cat_avg * (c['percentage_weight'] / 100.0)
+                weighted = cat_avg * (float(c['percentage_weight']) / 100.0)
                 total_final += weighted
 
                 c['assessments'] = assessments
